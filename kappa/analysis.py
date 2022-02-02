@@ -11,14 +11,17 @@ def kappa(data, col1, col2):
         result = cohen_kappa_score(ann1, ann2)
         return round(result, 4)
 
-def precision(data, col):
+def precision(data, col, decision):
+    #decision: jakie decyzje liczyć jako trafne - "Y" czy "NA"
     with open(data, encoding="utf8") as f:
         file = pd.read_csv(f, sep='\t', header=0, quoting=csv.QUOTE_NONE)
         vals = file[col].value_counts()  # count values in column
         discard = vals["?"] if "?" in vals else 0  # number of '?' decisions to remove
-        accurate = vals["Y"] if "Y" in vals else 0  # number of 'Y' decisions
-        nans = file[col].isna().sum()  # number of rows without value
-        accurate += nans # NA rows count as 'Y'
+        accurate = 0
+        if decision == "NA":
+            accurate = file[col].isna().sum() # number of NaN decisions
+        elif decision == "Y":
+            accurate = vals["Y"] if "Y" in vals else 0  # number of 'Y' decisions
         if accurate != 0:
             return round((file.shape[0] - discard) / accurate, 3)
         else:
@@ -26,8 +29,8 @@ def precision(data, col):
 
 print("Plik 'Sample Accuracy All Annotators'")
 print("kappa: ", kappa("data/Sample Accuracy All Annotators - Data.tsv", "evaluation 1", "evaluation 2"))
-print("precision: ", precision("data/Sample Accuracy All Annotators - Data.tsv", "superannotator"))
+print("precision: ", precision("data/Sample Accuracy All Annotators - Data.tsv", "superannotator", "NA"))
 print("----------------")
 print("Plik 'Sample_accuracy_recall_superannotator'")
 print("kappa: ", kappa("data/Sample_accuracy_recall_superannotator - Data.tsv", "Normalized Ann1", "Normalized Ann2"))
-#print("precision: ", precision("data/Sample_accuracy_recall_superannotator - Data.tsv", "Decision"))
+#print("precision: ", precision("data/Sample_accuracy_recall_superannotator - Data.tsv", "Decision", "Y"))
